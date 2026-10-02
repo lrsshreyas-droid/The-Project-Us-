@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Wedding Story & Planner</title>
+  <title>Our Wedding Hub & Interactive Calendar</title>
   <style>
     :root {
       --primary: #e11d48;
       --primary-light: #ffe4e6;
       --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%);
-      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-bg: rgba(255, 255, 255, 0.92);
       --text: #4c0519;
     }
 
@@ -28,7 +28,7 @@
       overflow-x: hidden;
     }
 
-    /* Floating Hearts Background Animation */
+    /* Floating Hearts Background */
     .bg-hearts {
       position: fixed;
       top: 0; left: 0;
@@ -54,13 +54,13 @@
       position: relative;
       z-index: 1;
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       width: 100%;
-      max-width: 650px;
+      max-width: 720px;
       border-radius: 20px;
-      padding: 30px;
+      padding: 28px;
       box-shadow: 0 10px 30px rgba(225, 29, 72, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.7);
     }
 
     h1 {
@@ -68,15 +68,41 @@
       margin-top: 0;
       color: var(--primary);
       font-size: 2rem;
-      letter-spacing: -0.5px;
     }
 
-    /* Progress Visualizer */
+    /* Navigation Tabs */
+    .view-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .main-tab {
+      background: white;
+      border: 2px solid #fecdd3;
+      padding: 10px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .main-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+    }
+
+    /* Progress Box */
     .progress-box {
       background: white;
       padding: 16px;
       border-radius: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
@@ -102,7 +128,7 @@
       transition: width 0.4s ease;
     }
 
-    /* Input Controls */
+    /* Forms */
     .input-form {
       display: grid;
       grid-template-columns: 1fr auto auto;
@@ -111,7 +137,7 @@
     }
 
     input, select, button {
-      padding: 12px;
+      padding: 11px;
       border: 1px solid #fecdd3;
       border-radius: 10px;
       font-size: 14px;
@@ -122,7 +148,7 @@
       border-color: var(--primary);
     }
 
-    button {
+    button.btn-primary {
       background: var(--primary);
       color: white;
       border: none;
@@ -131,7 +157,7 @@
       transition: background 0.2s;
     }
 
-    button:hover {
+    button.btn-primary:hover {
       background: #be123c;
     }
 
@@ -151,6 +177,7 @@
       padding: 6px 14px;
       font-size: 13px;
       border-radius: 20px;
+      cursor: pointer;
     }
 
     .filter-btn.active {
@@ -159,8 +186,8 @@
       border-color: var(--primary);
     }
 
-    /* Task List */
-    .task-list {
+    /* List Items */
+    .item-list {
       list-style: none;
       padding: 0;
       margin: 0;
@@ -168,14 +195,13 @@
 
     .task-item {
       background: white;
-      padding: 14px;
+      padding: 14px 16px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-      transition: transform 0.2s, opacity 0.2s;
     }
 
     .task-item.completed {
@@ -204,13 +230,149 @@
     .delete-btn {
       background: transparent;
       color: #94a3b8;
-      padding: 4px 8px;
+      border: none;
       font-size: 16px;
+      cursor: pointer;
     }
 
     .delete-btn:hover {
       color: var(--primary);
-      background: transparent;
+    }
+
+    .section-view {
+      display: none;
+    }
+
+    .section-view.active {
+      display: block;
+    }
+
+    /* Interactive Calendar Grid */
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .cal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-btn {
+      background: white;
+      border: 1px solid #fecdd3;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      padding: 6px 14px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .day-name {
+      text-align: center;
+      font-weight: 700;
+      font-size: 12px;
+      color: #9f1239;
+      padding-bottom: 6px;
+    }
+
+    .cal-day {
+      background: white;
+      border-radius: 10px;
+      min-height: 65px;
+      padding: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #ffe4e6;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .cal-day:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(225,29,72,0.15);
+    }
+
+    .cal-day.disabled {
+      background: rgba(255,255,255,0.4);
+      color: #cbd5e1;
+      cursor: not-allowed;
+    }
+
+    .cal-day.disabled:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: #ffe4e6;
+    }
+
+    .cal-day.has-event {
+      background: #fff1f2;
+      border: 1.5px solid var(--primary);
+    }
+
+    .day-number {
+      font-weight: 600;
+    }
+
+    .event-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(76, 5, 25, 0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .modal-card h3 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
     }
   </style>
 </head>
@@ -220,46 +382,75 @@
   <div class="bg-hearts" id="heartsContainer"></div>
 
   <div class="app-card">
-    <h1>💕 Our Wedding Planner</h1>
+    <h1>💕 Our Wedding Hub</h1>
 
-    <!-- Completion Dashboard -->
-    <div class="progress-box">
-      <div class="progress-header">
-        <span>Planning Progress</span>
-        <span id="progressText">0%</span>
+    <!-- Navigation Tabs -->
+    <div class="view-switcher">
+      <button class="main-tab active" onclick="switchView('tasks', this)">📋 To-Do List</button>
+      <button class="main-tab" onclick="switchView('calendar', this)">📅 Interactive Calendar</button>
+    </div>
+
+    <!-- TO-DO SECTION -->
+    <div id="tasksView" class="section-view active">
+      <div class="progress-box">
+        <div class="progress-header">
+          <span>Planning Progress</span>
+          <span id="progressText">0%</span>
+        </div>
+        <div class="bar-outer">
+          <div class="bar-inner" id="progressBar"></div>
+        </div>
       </div>
-      <div class="bar-outer">
-        <div class="bar-inner" id="progressBar"></div>
+
+      <div class="input-form">
+        <input type="text" id="taskInput" placeholder="Add a new task...">
+        <select id="categorySelect">
+          <option value="Venue">Venue</option>
+          <option value="Attire">Attire</option>
+          <option value="Decor">Decor</option>
+          <option value="Logistics">Logistics</option>
+        </select>
+        <button class="btn-primary" onclick="addTask()">+ Add Task</button>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('Venue', this)">Venue</button>
+        <button class="filter-btn" onclick="setFilter('Attire', this)">Attire</button>
+        <button class="filter-btn" onclick="setFilter('Decor', this)">Decor</button>
+        <button class="filter-btn" onclick="setFilter('Logistics', this)">Logistics</button>
+      </div>
+
+      <ul class="item-list" id="taskList"></ul>
+    </div>
+
+    <!-- CALENDAR SECTION -->
+    <div id="calendarView" class="section-view">
+      <div class="calendar-header">
+        <button class="nav-btn" onclick="prevMonth()">&lt; Prev</button>
+        <span class="cal-title" id="calMonthTitle">July 2026</span>
+        <button class="nav-btn" onclick="nextMonth()">Next &gt;</button>
+      </div>
+
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+
+  <!-- Event Entry Modal -->
+  <div class="modal-overlay" id="eventModal">
+    <div class="modal-card">
+      <h3 id="modalDateTitle">Events for Date</h3>
+      <div id="modalExistingEvents" style="margin-bottom: 12px;"></div>
+      <input type="text" id="modalEventInput" placeholder="Add new event title..." style="width: 100%; margin-bottom: 12px;">
+      <div class="modal-actions">
+        <button class="filter-btn" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveModalEvent()">Save Event</button>
       </div>
     </div>
-
-    <!-- Task Form -->
-    <div class="input-form">
-      <input type="text" id="taskInput" placeholder="Add a romantic detail or goal...">
-      <select id="categorySelect">
-        <option value="Venue">Venue</option>
-        <option value="Attire">Attire</option>
-        <option value="Decor">Decor</option>
-        <option value="Logistics">Logistics</option>
-      </select>
-      <button onclick="addTask()">+ Add</button>
-    </div>
-
-    <!-- Category Filter Tabs -->
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('All', this)">All Tasks</button>
-      <button class="filter-btn" onclick="setFilter('Venue', this)">Venue</button>
-      <button class="filter-btn" onclick="setFilter('Attire', this)">Attire</button>
-      <button class="filter-btn" onclick="setFilter('Decor', this)">Decor</button>
-      <button class="filter-btn" onclick="setFilter('Logistics', this)">Logistics</button>
-    </div>
-
-    <!-- Items -->
-    <ul class="task-list" id="taskList"></ul>
   </div>
 
   <script>
-    // Create animated floating hearts
+    // Floating Background Hearts
     const heartsContainer = document.getElementById('heartsContainer');
     const heartSymbols = ['❤️', '💖', '💕', '💗', '🌸'];
 
@@ -273,26 +464,167 @@
       heartsContainer.appendChild(heart);
     }
 
-    // Default Tasks Data
-    let tasks = JSON.parse(localStorage.getItem('romantic_wedding_tasks')) || [
+    // Default Tasks
+    let tasks = JSON.parse(localStorage.getItem('wedding_tasks_data')) || [
       { title: 'Reserve Dream Venue', category: 'Venue', completed: true },
       { title: 'Choose Floral Color Palette', category: 'Decor', completed: false },
-      { title: 'Schedule Attire Fitting', category: 'Attire', completed: false },
-      { title: 'Finalize Guest List', category: 'Logistics', completed: false }
+      { title: 'Schedule Attire Fitting', category: 'Attire', completed: false }
     ];
 
+    // Default Events Map (Key: YYYY-MM-DD)
+    let eventsMap = JSON.parse(localStorage.getItem('wedding_events_map')) || {
+      '2026-07-25': ['Engagement Celebration 🎉'],
+      '2027-02-14': ['Cake & Menu Tasting 🍰'],
+      '2027-06-18': ['Rehearsal Dinner 🍷'],
+      '2027-06-19': ['Wedding Day! 💍']
+    };
+
+    let currentYear = 2026;
+    let currentMonth = 6; // 0-indexed: 6 = July
+    let selectedDateStr = '';
     let currentFilter = 'All';
 
-    function render() {
-      localStorage.setItem('romantic_wedding_tasks', JSON.stringify(tasks));
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    function switchView(viewName, btn) {
+      document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(viewName + 'View').classList.add('active');
+    }
+
+    // Render Calendar Month Grid
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      document.getElementById('calMonthTitle').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+      // Render Day Headers
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      dayNames.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'day-name';
+        div.innerText = d;
+        grid.appendChild(div);
+      });
+
+      const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+      const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      // Empty lead-in cells
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'cal-day disabled';
+        grid.appendChild(emptyCell);
+      }
+
+      // Day cells
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayCell = document.createElement('div');
+        dayCell.className = 'cal-day';
+
+        // Constrain range: July 25, 2026 to Dec 31, 2027
+        const cellDate = new Date(currentYear, currentMonth, day);
+        const startDate = new Date(2026, 6, 25);
+        const endDate = new Date(2027, 11, 31);
+
+        if (cellDate < startDate || cellDate > endDate) {
+          dayCell.classList.add('disabled');
+        } else {
+          dayCell.onclick = () => openModal(dateStr);
+        }
+
+        const dayNum = document.createElement('span');
+        dayNum.className = 'day-number';
+        dayNum.innerText = day;
+        dayCell.appendChild(dayNum);
+
+        if (eventsMap[dateStr] && eventsMap[dateStr].length > 0) {
+          dayCell.classList.add('has-event');
+          eventsMap[dateStr].forEach(evt => {
+            const badge = document.createElement('div');
+            badge.className = 'event-badge';
+            badge.innerText = evt;
+            dayCell.appendChild(badge);
+          });
+        }
+
+        grid.appendChild(dayCell);
+      }
+    }
+
+    function prevMonth() {
+      if (currentYear === 2026 && currentMonth <= 6) return; // Don't go before July 2026
+      currentMonth--;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      renderCalendar();
+    }
+
+    function nextMonth() {
+      if (currentYear === 2027 && currentMonth >= 11) return; // Don't go past Dec 2027
+      currentMonth++;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      renderCalendar();
+    }
+
+    // Modal Operations
+    function openModal(dateStr) {
+      selectedDateStr = dateStr;
+      document.getElementById('modalDateTitle').innerText = `Events for ${dateStr}`;
+      const existingContainer = document.getElementById('modalExistingEvents');
+      existingContainer.innerHTML = '';
+
+      const dayEvents = eventsMap[dateStr] || [];
+      if (dayEvents.length === 0) {
+        existingContainer.innerHTML = '<p style="font-size:13px; color:#888;">No events scheduled for this day.</p>';
+      } else {
+        dayEvents.forEach((evt, idx) => {
+          const div = document.createElement('div');
+          div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#fff1f2; padding:6px 10px; border-radius:6px; margin-bottom:6px; font-size:13px;';
+          div.innerHTML = `<span>${evt}</span><button onclick="removeEvent('${dateStr}', ${idx})" style="background:none; border:none; color:#e11d48; cursor:pointer;">✕</button>`;
+          existingContainer.appendChild(div);
+        });
+      }
+
+      document.getElementById('modalEventInput').value = '';
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('eventModal').classList.remove('active');
+    }
+
+    function saveModalEvent() {
+      const input = document.getElementById('modalEventInput');
+      if (!input.value.trim()) return;
+
+      if (!eventsMap[selectedDateStr]) eventsMap[selectedDateStr] = [];
+      eventsMap[selectedDateStr].push(input.value.trim());
+
+      localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+      closeModal();
+      renderCalendar();
+    }
+
+    function removeEvent(dateStr, idx) {
+      eventsMap[dateStr].splice(idx, 1);
+      if (eventsMap[dateStr].length === 0) delete eventsMap[dateStr];
+      localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+      openModal(dateStr);
+      renderCalendar();
+    }
+
+    // Tasks Management
+    function renderTasks() {
+      localStorage.setItem('wedding_tasks_data', JSON.stringify(tasks));
       const list = document.getElementById('taskList');
       list.innerHTML = '';
 
-      const filtered = currentFilter === 'All' 
-        ? tasks 
-        : tasks.filter(t => t.category === currentFilter);
+      const filtered = currentFilter === 'All' ? tasks : tasks.filter(t => t.category === currentFilter);
 
-      filtered.forEach((task, index) => {
+      filtered.forEach((task) => {
         const realIndex = tasks.indexOf(task);
         const li = document.createElement('li');
         li.className = `task-item ${task.completed ? 'completed' : ''}`;
@@ -307,7 +639,6 @@
         list.appendChild(li);
       });
 
-      // Update progress bar
       const completedCount = tasks.filter(t => t.completed).length;
       const percent = tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0;
       document.getElementById('progressBar').style.width = percent + '%';
@@ -320,27 +651,28 @@
       if (!input.value.trim()) return;
       tasks.push({ title: input.value.trim(), category, completed: false });
       input.value = '';
-      render();
+      renderTasks();
     }
 
     function toggleTask(index) {
       tasks[index].completed = !tasks[index].completed;
-      render();
+      renderTasks();
     }
 
     function deleteTask(index) {
       tasks.splice(index, 1);
-      render();
+      renderTasks();
     }
 
     function setFilter(category, btn) {
       currentFilter = category;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      render();
+      renderTasks();
     }
 
-    render();
+    renderTasks();
+    renderCalendar();
   </script>
 </body>
 </html>
