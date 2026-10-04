@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The-Project-Us & Interactive Hub</title>
+  <title>Our Wedding Story & Shared Hub</title>
+
+  <!-- Firebase JavaScript SDK (v9 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
     :root {
       --primary: #e11d48;
@@ -46,7 +51,7 @@
       100% { filter: hue-rotate(15deg) brightness(1.08); }
     }
 
-    /* Interactive HTML5 Canvas Particles */
+    /* Interactive Canvas Particles */
     #bgCanvas {
       position: fixed;
       top: 0; left: 0;
@@ -77,7 +82,7 @@
       100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
     }
 
-    /* Local Photo Background Slots (Polaroid Frames) */
+    /* Local Photo Background Slots */
     .photo-slot {
       position: absolute;
       width: 145px;
@@ -143,9 +148,17 @@
     h1 {
       text-align: center;
       margin-top: 0;
+      margin-bottom: 4px;
       color: var(--primary);
       font-size: 2.2rem;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .sync-status {
+      text-align: center;
+      font-size: 12px;
+      color: #059669;
+      font-weight: 600;
+      margin-bottom: 20px;
     }
 
     /* Navigation Tabs */
@@ -471,7 +484,8 @@
 
   <!-- Main 3D Card Container -->
   <div class="app-card" id="appCard">
-    <h1>💕 The Project "Us"</h1>
+    <h1>💕 Our Wedding Hub</h1>
+    <div class="sync-status" id="syncStatus">🟢 Connected & Real-time Synced</div>
 
     <div class="view-switcher">
       <button class="main-tab active" onclick="switchView('tasks', this)">📋 3D To-Do List</button>
@@ -538,7 +552,24 @@
   </div>
 
   <script>
-    // HTML5 Canvas Background Particle Effect
+    // Firebase Realtime Cloud Synchronization Setup
+    const firebaseConfig = {
+      databaseURL: "https://wedding-planner-sync-default-rtdb.firebaseio.com/"
+    };
+    
+    let db;
+    let isCloudSyncActive = false;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      isCloudSyncActive = true;
+    } catch (e) {
+      document.getElementById('syncStatus').innerText = "🟡 Offline Mode (Local Only)";
+      document.getElementById('syncStatus').style.color = "#d97706";
+    }
+
+    // Canvas Background Particles
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -555,7 +586,6 @@
       mouse.x = e.x;
       mouse.y = e.y;
 
-      // 3D Perspective Card Tilt Physics
       const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
       const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
       document.getElementById('appCard').style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
@@ -609,7 +639,7 @@
     }
     animateParticles();
 
-    // Local Photo Frame Uploaders
+    // Local Photo Slot Uploaders
     function triggerPhotoUpload(id) {
       document.getElementById(`file-${id}`).click();
     }
@@ -652,24 +682,52 @@
       heartsContainer.appendChild(heart);
     }
 
-    // Data Structures
-    let tasks = JSON.parse(localStorage.getItem('wedding_tasks_data')) || [
+    // App State
+    let tasks = [
       { title: 'Reserve Dream Venue', category: 'Venue', completed: true },
       { title: 'Choose Floral Color Palette', category: 'Decor', completed: false },
       { title: 'Schedule Attire Fitting', category: 'Attire', completed: false }
     ];
 
-    let eventsMap = JSON.parse(localStorage.getItem('wedding_events_map')) || {
+    let eventsMap = {
       '2026-07-25': ['Engagement Celebration 🎉'],
       '2027-02-14': ['Cake Tasting 🍰'],
       '2027-06-19': ['Wedding Day! 💍']
     };
 
     let currentYear = 2026;
-    let currentMonth = 6; // July
+    let currentMonth = 6;
     let selectedDateStr = '';
     let currentFilter = 'All';
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // Real-Time Database Sync Listeners
+    if (isCloudSyncActive) {
+      db.ref('shared_wedding_tasks').on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        if (cloudData) {
+          tasks = cloudData;
+          renderTasks();
+        }
+      });
+
+      db.ref('shared_wedding_events').on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        if (cloudData) {
+          eventsMap = cloudData;
+          renderCalendar();
+        }
+      });
+    }
+
+    function syncToCloud() {
+      if (isCloudSyncActive) {
+        db.ref('shared_wedding_tasks').set(tasks);
+        db.ref('shared_wedding_events').set(eventsMap);
+      }
+      localStorage.setItem('wedding_tasks_data', JSON.stringify(tasks));
+      localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+    }
 
     function switchView(viewName, btn) {
       document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
@@ -680,7 +738,6 @@
 
     // Tasks Management
     function renderTasks() {
-      localStorage.setItem('wedding_tasks_data', JSON.stringify(tasks));
       const list = document.getElementById('taskList');
       list.innerHTML = '';
 
@@ -713,16 +770,19 @@
       if (!input.value.trim()) return;
       tasks.push({ title: input.value.trim(), category, completed: false });
       input.value = '';
+      syncToCloud();
       renderTasks();
     }
 
     function toggleTask(index) {
       tasks[index].completed = !tasks[index].completed;
+      syncToCloud();
       renderTasks();
     }
 
     function deleteTask(index) {
       tasks.splice(index, 1);
+      syncToCloud();
       renderTasks();
     }
 
@@ -830,7 +890,7 @@
       if (!input.value.trim()) return;
       if (!eventsMap[selectedDateStr]) eventsMap[selectedDateStr] = [];
       eventsMap[selectedDateStr].push(input.value.trim());
-      localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+      syncToCloud();
       closeModal();
       renderCalendar();
     }
@@ -838,7 +898,7 @@
     function removeEvent(dateStr, idx) {
       eventsMap[dateStr].splice(idx, 1);
       if (eventsMap[dateStr].length === 0) delete eventsMap[dateStr];
-      localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+      syncToCloud();
       openModal(dateStr);
       renderCalendar();
     }
