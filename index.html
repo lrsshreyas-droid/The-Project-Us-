@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Wedding Story & Shared Hub</title>
+  <title>The Project "Us"</title>
 
   <!-- Firebase JavaScript SDK (v9 Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -218,7 +218,6 @@
       border-radius: 6px;
       transition: width 0.4s ease;
     }
-
     /* Inputs and Buttons */
     .input-form {
       display: grid;
@@ -484,8 +483,8 @@
 
   <!-- Main 3D Card Container -->
   <div class="app-card" id="appCard">
-    <h1>💕 Our Wedding Hub</h1>
-    <div class="sync-status" id="syncStatus">🟢 Connected & Real-time Synced</div>
+    <h1>💕 The Project "Us"</h1>
+    <div class="sync-status" id="syncStatus">🟢 Saved to Local Storage & Google Sheets Sync Ready</div>
 
     <div class="view-switcher">
       <button class="main-tab active" onclick="switchView('tasks', this)">📋 3D To-Do List</button>
@@ -552,22 +551,8 @@
   </div>
 
   <script>
-    // Firebase Realtime Cloud Synchronization Setup
-    const firebaseConfig = {
-      databaseURL: "https://wedding-planner-sync-default-rtdb.firebaseio.com/"
-    };
-    
-    let db;
-    let isCloudSyncActive = false;
-
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-      isCloudSyncActive = true;
-    } catch (e) {
-      document.getElementById('syncStatus').innerText = "🟡 Offline Mode (Local Only)";
-      document.getElementById('syncStatus').style.color = "#d97706";
-    }
+    // Optional Google Apps Script Web App Endpoint for direct sheet sync
+    const GOOGLE_SHEET_WEBAPP_URL = ""; 
 
     // Canvas Background Particles
     const canvas = document.getElementById('bgCanvas');
@@ -682,18 +667,21 @@
       heartsContainer.appendChild(heart);
     }
 
-    // App State
-    let tasks = [
+    // App State - Load from localStorage if present
+    const defaultTasks = [
       { title: 'Reserve Dream Venue', category: 'Venue', completed: true },
       { title: 'Choose Floral Color Palette', category: 'Decor', completed: false },
       { title: 'Schedule Attire Fitting', category: 'Attire', completed: false }
     ];
 
-    let eventsMap = {
+    const defaultEvents = {
       '2026-07-25': ['Engagement Celebration 🎉'],
       '2027-02-14': ['Cake Tasting 🍰'],
       '2027-06-19': ['Wedding Day! 💍']
     };
+
+    let tasks = JSON.parse(localStorage.getItem('wedding_tasks_data')) || defaultTasks;
+    let eventsMap = JSON.parse(localStorage.getItem('wedding_events_map')) || defaultEvents;
 
     let currentYear = 2026;
     let currentMonth = 6;
@@ -701,32 +689,18 @@
     let currentFilter = 'All';
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    // Real-Time Database Sync Listeners
-    if (isCloudSyncActive) {
-      db.ref('shared_wedding_tasks').on('value', (snapshot) => {
-        const cloudData = snapshot.val();
-        if (cloudData) {
-          tasks = cloudData;
-          renderTasks();
-        }
-      });
-
-      db.ref('shared_wedding_events').on('value', (snapshot) => {
-        const cloudData = snapshot.val();
-        if (cloudData) {
-          eventsMap = cloudData;
-          renderCalendar();
-        }
-      });
-    }
-
-    function syncToCloud() {
-      if (isCloudSyncActive) {
-        db.ref('shared_wedding_tasks').set(tasks);
-        db.ref('shared_wedding_events').set(eventsMap);
-      }
+    function syncData() {
       localStorage.setItem('wedding_tasks_data', JSON.stringify(tasks));
       localStorage.setItem('wedding_events_map', JSON.stringify(eventsMap));
+
+      if (GOOGLE_SHEET_WEBAPP_URL) {
+        fetch(GOOGLE_SHEET_WEBAPP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks, eventsMap })
+        }).catch(err => console.log('Google Sheets sync notice:', err));
+      }
     }
 
     function switchView(viewName, btn) {
@@ -770,19 +744,19 @@
       if (!input.value.trim()) return;
       tasks.push({ title: input.value.trim(), category, completed: false });
       input.value = '';
-      syncToCloud();
+      syncData();
       renderTasks();
     }
 
     function toggleTask(index) {
       tasks[index].completed = !tasks[index].completed;
-      syncToCloud();
+      syncData();
       renderTasks();
     }
 
     function deleteTask(index) {
       tasks.splice(index, 1);
-      syncToCloud();
+      syncData();
       renderTasks();
     }
 
@@ -890,7 +864,7 @@
       if (!input.value.trim()) return;
       if (!eventsMap[selectedDateStr]) eventsMap[selectedDateStr] = [];
       eventsMap[selectedDateStr].push(input.value.trim());
-      syncToCloud();
+      syncData();
       closeModal();
       renderCalendar();
     }
@@ -898,7 +872,7 @@
     function removeEvent(dateStr, idx) {
       eventsMap[dateStr].splice(idx, 1);
       if (eventsMap[dateStr].length === 0) delete eventsMap[dateStr];
-      syncToCloud();
+      syncData();
       openModal(dateStr);
       renderCalendar();
     }
